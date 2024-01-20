@@ -15,17 +15,18 @@ uint8_t screenNo = 0;
 uint16_t screenChangeInterval = 8000;
 uint32_t timePast = 0;
 
-// put function declarations here:
+// Function declarations:
 void displaySetupMode();
 void displayLocalIP();
 void displayPublicIP();
+void displaySSID();
+void cycleScreen();
+
 void wifiManagerSetup();
+void updateNetworkDetails();
 void getLocalIP();
 void getPublicIP();
 void getSSID();
-void displaySSID();
-void updateNetworkDetails();
-void cycleScreen();
 
 void setup() {
     lcd.begin(16, 2);
@@ -57,7 +58,7 @@ void loop() {
     }
 }
 
-// put function definitions here:
+// Functions
 void displaySetupMode() {
     char bootIPString[16];
     sprintf(bootIPString, "%d.%d.%d.%d", bootIP[0], bootIP[1], bootIP[2], bootIP[3]);
@@ -76,6 +77,30 @@ void displayLocalIP() {
     lcd.print(localIP);
 }
 
+void displayPublicIP() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Public IP:");
+    lcd.setCursor(0, 1);
+    lcd.print(publicIP);
+}
+
+void displaySSID() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("WiFi Network:");
+    lcd.setCursor(0, 1);
+    lcd.print(SSID);
+}
+
+void cycleScreen() {
+    if (screenNo < 2) {
+        screenNo++;
+    } else {
+        screenNo = 0;
+    }
+}
+
 void wifiManagerSetup() {
     displaySetupMode();
     WiFi.mode(WIFI_STA); // explicitly set mode, esp defaults to STA+AP
@@ -91,6 +116,12 @@ void wifiManagerSetup() {
     } else {
         Serial.println("Configportal running");
     }
+}
+
+void updateNetworkDetails() {
+    getPublicIP();
+    getLocalIP();
+    getSSID();
 }
 
 void getLocalIP() {
@@ -125,33 +156,3 @@ void getPublicIP() {
 void getSSID() {
     WiFi.SSID().toCharArray(SSID, 64);
 };
-
-void displayPublicIP() {
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("Public IP:");
-    lcd.setCursor(0, 1);
-    lcd.print(publicIP);
-}
-
-void displaySSID() {
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("WiFi Network:");
-    lcd.setCursor(0, 1);
-    lcd.print(SSID);
-}
-
-void updateNetworkDetails() {
-    getPublicIP();
-    getLocalIP();
-    getSSID();
-}
-
-void cycleScreen() {
-    if (screenNo < 2) {
-        screenNo++;
-    } else {
-        screenNo = 0;
-    }
-}
