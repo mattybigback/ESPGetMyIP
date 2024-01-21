@@ -9,13 +9,15 @@ WiFiManager wm;
 const uint8_t bootIP[] = {192, 168, 100, 1};
 char localIP[15]; // Char array to store human readable IP address
 char publicIP[15];
-char SSID[64];
+char SSID[32];
+uint8_t SSIDLength;
 bool publicIPObtained = false;
 uint8_t screenNo = 0;
 uint16_t screenChangeInterval = 8000;
 uint32_t timePast = 0;
 
 // Function declarations:
+void displaybootScreen();
 void displaySetupMode();
 void displayLocalIP();
 void displayPublicIP();
@@ -59,6 +61,15 @@ void loop() {
 }
 
 // Functions
+
+void displayBootScreen() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("ESP! Get My IP!");
+    lcd.setCursor(0, 1);
+    lcd.print("mjharrison.co.uk");
+}
+
 void displaySetupMode() {
     char bootIPString[16];
     sprintf(bootIPString, "%d.%d.%d.%d", bootIP[0], bootIP[1], bootIP[2], bootIP[3]);
@@ -102,7 +113,7 @@ void cycleScreen() {
 }
 
 void wifiManagerSetup() {
-    displaySetupMode();
+    displayBootScreen();
     WiFi.mode(WIFI_STA); // explicitly set mode, esp defaults to STA+AP
     Serial.println("Entering WiFi config mode...");
     // wm.resetSettings();
@@ -114,6 +125,7 @@ void wifiManagerSetup() {
     if (wm.autoConnect("AutoConnectAP", "password")) {
         Serial.println("connected :)");
     } else {
+        displaySetupMode();
         Serial.println("Configportal running");
     }
 }
@@ -129,30 +141,24 @@ void getLocalIP() {
 }
 
 void getPublicIP() {
-
     if ((WiFi.status() == WL_CONNECTED) && publicIPObtained == false) { // Check the current connection status
-
         HTTPClient http;
-
         http.begin("https://api.ipify.org"); // Specify the URL
         int httpCode = http.GET();           // Make the request
-
         if (httpCode > 0) { // Check for the returning code
-
             String payload = http.getString();
-            Serial.println(httpCode);
-            Serial.println(payload);
             payload.toCharArray(publicIP, 15);
             publicIPObtained = true;
-
         } else {
             Serial.println("Error on HTTP request");
             publicIPObtained = false;
+            strncpy(publicIP, "0.0.0.0", sizeof(publicIP) - 1);
         }
         http.end(); // Free the resources
     }
 }
 
 void getSSID() {
-    WiFi.SSID().toCharArray(SSID, 64);
-};
+    SSIDLength = WiFi.SSID().length();
+    WiFi.SSID().toCharArray(SSID, SSIDLength+1);
+}
