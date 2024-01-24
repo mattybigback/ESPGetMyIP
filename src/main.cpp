@@ -7,28 +7,20 @@
 LiquidCrystal_I2C lcd(PCF8574_ADDR_A21_A11_A01, 4, 5, 6, 16, 11, 12, 13, 14, POSITIVE);
 WiFiManager wm;
 const uint8_t bootIP[] = {192, 168, 100, 1};
-char localIP[15]; // Char array to store human readable IP address
-char publicIP[15];
-char SSID[32];
-uint8_t SSIDLength;
-bool publicIPObtained = false;
 uint8_t screenNo = 0;
-uint16_t screenChangeInterval = 8000;
+uint16_t screenChangeInterval = 1000;
 uint32_t timePast = 0;
+char publicIP[16] = "0.0.0.0"; // 16 bytes for "xxx.xxx.xxx.xxx\0"
+
 
 // Function declarations:
-void displaybootScreen();
+void displayLCD(const char* line1, const char* line2);
 void displaySetupMode();
-void displayLocalIP();
-void displayPublicIP();
-void displaySSID();
 void cycleScreen();
-
 void wifiManagerSetup();
-void updateNetworkDetails();
-void getLocalIP();
-void getPublicIP();
-void getSSID();
+char* getLocalIP();
+char* getPublicIP();
+char* getSSID();
 
 void setup() {
     lcd.begin(16, 2);
@@ -40,19 +32,26 @@ void setup() {
 void loop() {
     wm.process();
     if (WiFi.status() == WL_CONNECTED) {
-        updateNetworkDetails();
+        char* localIP = getLocalIP();
+        char* SSID = getSSID();
+        if (strcmp(publicIP, "0.0.0.0") == 0) {
+            char* newPublicIP = getPublicIP();
+            Serial.println("No Public IP :(");
+            strncpy(publicIP, newPublicIP, sizeof(publicIP)-1);
+        }
         if (millis() - timePast >= screenChangeInterval) {
             timePast = millis();
-
             switch (screenNo) {
             case 0:
-                displayLocalIP();
+                displayLCD("Local IP:", localIP);
+                Serial.println(localIP);
                 break;
             case 1:
-                displayPublicIP();
+                displayLCD("Public IP:", publicIP);
+                Serial.println(publicIP);
                 break;
             case 2:
-                displaySSID();
+                displayLCD("WiFi Network",SSID);
                 break;
             }
             cycleScreen();
@@ -62,47 +61,20 @@ void loop() {
 
 // Functions
 
-void displayBootScreen() {
+void displayLCD(const char* line1, const char* line2){
     lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("ESP! Get My IP!");
-    lcd.setCursor(0, 1);
-    lcd.print("mjharrison.co.uk");
+    lcd.setCursor(0,0);
+    lcd.print(line1);
+    lcd.setCursor(0,1);
+    lcd.print(line2);
 }
 
 void displaySetupMode() {
     char bootIPString[16];
     sprintf(bootIPString, "%d.%d.%d.%d", bootIP[0], bootIP[1], bootIP[2], bootIP[3]);
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("WiFi Setup Mode");
-    lcd.setCursor(0, 1);
-    lcd.print(bootIPString);
+    displayLCD(bootIPString, "WiFi Setup Mode");
 }
 
-void displayLocalIP() {
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("Local IP:");
-    lcd.setCursor(0, 1);
-    lcd.print(localIP);
-}
-
-void displayPublicIP() {
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("Public IP:");
-    lcd.setCursor(0, 1);
-    lcd.print(publicIP);
-}
-
-void displaySSID() {
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("WiFi Network:");
-    lcd.setCursor(0, 1);
-    lcd.print(SSID);
-}
 
 void cycleScreen() {
     if (screenNo < 2) {
@@ -113,7 +85,7 @@ void cycleScreen() {
 }
 
 void wifiManagerSetup() {
-    displayBootScreen();
+    displayLCD("ESP! Get My IP!", "mjharrison.org");
     WiFi.mode(WIFI_STA); // explicitly set mode, esp defaults to STA+AP
     Serial.println("Entering WiFi config mode...");
     // wm.resetSettings();
@@ -130,35 +102,40 @@ void wifiManagerSetup() {
     }
 }
 
-void updateNetworkDetails() {
-    getPublicIP();
-    getLocalIP();
-    getSSID();
+
+
+char* getLocalIP() {
+    static char localIP[16];
+    IPAddress IPLocal = WiFi.localIP();
+    sprintf(localIP, "%d.%d.%d.%d", IPLocal[0], IPLocal[1], IPLocal[2], IPLocal[3]);
+    return localIP;
 }
 
-void getLocalIP() {
-    sprintf(localIP, "%d.%d.%d.%d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
-}
+char* getPublicIP() {
+    static char newPublicIP[16] = "0.0.0.0";
+    Serial.println("Getting public IP...");
 
-void getPublicIP() {
-    if ((WiFi.status() == WL_CONNECTED) && publicIPObtained == false) { // Check the current connection status
+    if (WiFi.status() == WL_CONNECTED) { // Check the current connection status
         HTTPClient http;
         http.begin("https://api.ipify.org"); // Specify the URL
-        int httpCode = http.GET();           // Make the request
+        int httpCode = http.GET(); // Make the request
+
         if (httpCode > 0) { // Check for the returning code
             String payload = http.getString();
-            payload.toCharArray(publicIP, 15);
-            publicIPObtained = true;
+            payload.toCharArray(newPublicIP, sizeof(newPublicIP));
+            Serial.println(newPublicIP);
         } else {
             Serial.println("Error on HTTP request");
-            publicIPObtained = false;
-            strncpy(publicIP, "0.0.0.0", sizeof(publicIP) - 1);
         }
+
         http.end(); // Free the resources
     }
+    return newPublicIP;
 }
 
-void getSSID() {
-    SSIDLength = WiFi.SSID().length();
+char* getSSID() {
+    static char SSID[33];
+    uint8_t SSIDLength = WiFi.SSID().length();
     WiFi.SSID().toCharArray(SSID, SSIDLength+1);
+    return SSID;
 }
