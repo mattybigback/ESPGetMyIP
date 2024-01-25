@@ -2,8 +2,8 @@
 #include <LiquidCrystal_I2C.h>
 #include <WiFi.h>
 #include <WiFiManager.h>
-#include "displayFunctions.h"
-#include "networkFunctions.h"
+#include "displayFunctions.hpp"
+#include "networkFunctions.hpp"
 
 LiquidCrystal_I2C lcd(PCF8574_ADDR_A21_A11_A01, 4, 5, 6, 16, 11, 12, 13, 14, POSITIVE);
 WiFiManager wm;

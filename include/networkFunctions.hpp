@@ -3,7 +3,7 @@
 
 #include <HTTPClient.h>
 #include <Arduino.h>
-#include <displayFunctions.h>
+#include <displayFunctions.hpp>
 #include <WiFiManager.h>
 
 extern WiFiManager wm;

@@ -1,4 +1,4 @@
-#include "displayFunctions.h"
+#include "displayFunctions.hpp"
 
 void displayLCD(const char *line1, const char *line2) {
     lcd.clear();

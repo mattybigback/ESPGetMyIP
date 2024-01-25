@@ -1,4 +1,4 @@
-#include "networkFunctions.h"
+#include "networkFunctions.hpp"
 
 char *getLocalIP() {
     static char localIP[16];
