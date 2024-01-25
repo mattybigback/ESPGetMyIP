@@ -1,5 +1,5 @@
-#ifndef FUNCTIONS_H
-#define FUNCTIONS_H
+#ifndef DISPLAYFUNCTIONS_H
+#define DISPLAYFUNCTIONS_H
 
 #include <LiquidCrystal_I2C.h>
 
@@ -14,4 +14,4 @@ void displaySetupMode();
 void cycleScreen();
 
 
-#endif // FUNCTIONS_H
+#endif // DISPLAYFUNCTIONS_H
