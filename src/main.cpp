@@ -3,6 +3,7 @@
 #include <LiquidCrystal_I2C.h>
 #include <WiFi.h>
 #include <WiFiManager.h>
+#include "displayFunctions.h"
 
 LiquidCrystal_I2C lcd(PCF8574_ADDR_A21_A11_A01, 4, 5, 6, 16, 11, 12, 13, 14, POSITIVE);
 WiFiManager wm;
@@ -13,9 +14,7 @@ uint32_t timePast = 0;
 char publicIP[16] = "0.0.0.0"; // 16 bytes for "xxx.xxx.xxx.xxx\0"
 
 // Function declarations:
-void displayLCD(const char *line1, const char *line2);
-void displaySetupMode();
-void cycleScreen();
+
 void wifiManagerSetup();
 char *getLocalIP();
 char *getPublicIP();
@@ -59,28 +58,6 @@ void loop() {
 }
 
 // Functions
-
-void displayLCD(const char *line1, const char *line2) {
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print(line1);
-    lcd.setCursor(0, 1);
-    lcd.print(line2);
-}
-
-void displaySetupMode() {
-    char bootIPString[16];
-    sprintf(bootIPString, "%d.%d.%d.%d", bootIP[0], bootIP[1], bootIP[2], bootIP[3]);
-    displayLCD(bootIPString, "WiFi Setup Mode");
-}
-
-void cycleScreen() {
-    if (screenNo < 2) {
-        screenNo++;
-    } else {
-        screenNo = 0;
-    }
-}
 
 void wifiManagerSetup() {
     displayLCD("ESP! Get My IP!", "mjharrison.org");
