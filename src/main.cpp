@@ -12,15 +12,14 @@ uint16_t screenChangeInterval = 1000;
 uint32_t timePast = 0;
 char publicIP[16] = "0.0.0.0"; // 16 bytes for "xxx.xxx.xxx.xxx\0"
 
-
 // Function declarations:
-void displayLCD(const char* line1, const char* line2);
+void displayLCD(const char *line1, const char *line2);
 void displaySetupMode();
 void cycleScreen();
 void wifiManagerSetup();
-char* getLocalIP();
-char* getPublicIP();
-char* getSSID();
+char *getLocalIP();
+char *getPublicIP();
+char *getSSID();
 
 void setup() {
     lcd.begin(16, 2);
@@ -32,12 +31,12 @@ void setup() {
 void loop() {
     wm.process();
     if (WiFi.status() == WL_CONNECTED) {
-        char* localIP = getLocalIP();
-        char* SSID = getSSID();
+        char *localIP = getLocalIP();
+        char *SSID = getSSID();
         if (strcmp(publicIP, "0.0.0.0") == 0) {
-            char* newPublicIP = getPublicIP();
+            char *newPublicIP = getPublicIP();
             Serial.println("No Public IP :(");
-            strncpy(publicIP, newPublicIP, sizeof(publicIP)-1);
+            strncpy(publicIP, newPublicIP, sizeof(publicIP) - 1);
         }
         if (millis() - timePast >= screenChangeInterval) {
             timePast = millis();
@@ -51,7 +50,7 @@ void loop() {
                 Serial.println(publicIP);
                 break;
             case 2:
-                displayLCD("WiFi Network",SSID);
+                displayLCD("WiFi Network", SSID);
                 break;
             }
             cycleScreen();
@@ -61,11 +60,11 @@ void loop() {
 
 // Functions
 
-void displayLCD(const char* line1, const char* line2){
+void displayLCD(const char *line1, const char *line2) {
     lcd.clear();
-    lcd.setCursor(0,0);
+    lcd.setCursor(0, 0);
     lcd.print(line1);
-    lcd.setCursor(0,1);
+    lcd.setCursor(0, 1);
     lcd.print(line2);
 }
 
@@ -74,7 +73,6 @@ void displaySetupMode() {
     sprintf(bootIPString, "%d.%d.%d.%d", bootIP[0], bootIP[1], bootIP[2], bootIP[3]);
     displayLCD(bootIPString, "WiFi Setup Mode");
 }
-
 
 void cycleScreen() {
     if (screenNo < 2) {
@@ -102,23 +100,21 @@ void wifiManagerSetup() {
     }
 }
 
-
-
-char* getLocalIP() {
+char *getLocalIP() {
     static char localIP[16];
     IPAddress IPLocal = WiFi.localIP();
     sprintf(localIP, "%d.%d.%d.%d", IPLocal[0], IPLocal[1], IPLocal[2], IPLocal[3]);
     return localIP;
 }
 
-char* getPublicIP() {
+char *getPublicIP() {
     static char newPublicIP[16] = "0.0.0.0";
     Serial.println("Getting public IP...");
 
     if (WiFi.status() == WL_CONNECTED) { // Check the current connection status
         HTTPClient http;
         http.begin("https://api.ipify.org"); // Specify the URL
-        int httpCode = http.GET(); // Make the request
+        int httpCode = http.GET();           // Make the request
 
         if (httpCode > 0) { // Check for the returning code
             String payload = http.getString();
@@ -133,9 +129,9 @@ char* getPublicIP() {
     return newPublicIP;
 }
 
-char* getSSID() {
+char *getSSID() {
     static char SSID[33];
     uint8_t SSIDLength = WiFi.SSID().length();
-    WiFi.SSID().toCharArray(SSID, SSIDLength+1);
+    WiFi.SSID().toCharArray(SSID, SSIDLength + 1);
     return SSID;
 }
